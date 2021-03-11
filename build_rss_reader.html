@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Build a rss reader - Alpine.js</title>
+</head>
+<body>
+  <div x-data="setup()" x-init="init">
+    <template x-for="entry in sortedFeed()">
+      <div style="padding: 2px;">
+        <h5 x-text="entry.title"></h5> <a x-bind:href="entry.link" x-text="entry.link"></a>
+        <h6 x-text="entry.date.toDateString()"></h6>
+      </div>
+    </template>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/rss-parser@3.7.6/dist/rss-parser.min.js"></script>
+
+  <script>
+    let parser = new RSSParser();
+
+    function setup() {
+      return {
+        feed: [],
+        sources: [
+          'https://codecourse.com/api/rss/courses',
+          'https://buttondown.email/alpinejs/rss'
+        ],
+
+        sortedFeed () {
+          return this.feed.sort((first, second) => {
+            return second.date.getTime() - first.date.getTime()
+          })
+        },
+
+        getSourceDetail (source) {
+          parser.parseURL(source, (err, feed) => {
+            if(err) {}
+            feed.items.forEach(entry => {
+              // console.log(entry)
+              this.addToFeed(entry);
+            })
+          })
+        },
+
+        addToFeed (item) {
+          this.feed.push({
+            author: item.author,
+            title: item.title,
+            link: item.link,
+            date: new Date(item.pubDate)
+          })
+        },
+
+        init() {
+          console.log('app initialized.')
+          this.sources.forEach(source => {
+            this.getSourceDetail(source)
+          })
+        }
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>AlpineJs directives Playground</title>
+</head>
+   <body>
+
+      <h4>Example 1 | x-text</h4>
+      <div x-data="{ title: 'Hello World' }">
+         <p x-text="title"></p>
+         <button @click="title='Alpine rocks'">Click to change</button>
+      </div>
+
+      <br><hr>
+      <h4>Example 2 | x-on:click event</h4>
+      <div x-data="{ count: 1 }">
+         <p x-text="count"></p>
+         <button @click="count++">Count Up</button>
+         <button @click="count--">Count Down</button>
+         <button @click="count=0">Reset</button>
+      </div>
+
+      <br><hr>
+      <h4>Example 3 | x-init</h4>
+      <div x-data="{ countdown: 60 }"
+         x-init="setInterval(function(){
+                     countdown--;
+                  }, 1000);
+                  ">
+         <h1 x-text="countdown"></h1>
+      </div>
+      
+      <br><hr>
+      <h4>Example 4 | x-show</h4>
+      <div x-data="{ show: false }">
+         <button @click="show=!show">Toggle me</button>
+         <br><br>
+         <div x-show="show">Hello!!</div>
+         <div x-show.transition="show">Hello!!</div>
+      </div>
+   
+      <br><hr>
+      <h4>Example 5 | x-model | 2 way data binding</h4>
+      <div x-data="{ title: 'AlpineJs is awesome' }">
+         <p x-text="title"></p>
+         <input type="text" x-model="title" />
+      </div>
+
+      <br><hr>
+      <h4>Example 5 | x-html</h4>
+      <div x-data="{ code: '<p>Dynamic values</p>' }">
+         <div x-html="code"></div>
+      </div>
+
+      <br><hr>
+      <h4>Example 6 | x-ref</h4>
+      <div x-data="{ code: '<p>Dynamic paragraph</p>' }">
+         <div x-ref="sentence">I am a sentence</div>
+         <button @click="$refs.sentence.innerText='I just changed'">Change Sentence</button>
+      </div>
+
+      <br><hr>
+      <h4>Example 7 | x-if</h4>
+      <div x-data="{ age: 27 }">
+         <template x-if="age > 30">
+            <p>I am 30+ years old.</p>
+         </template>
+         <template x-if="age < 30">
+            <p>I am less than 30.</p>
+         </template>
+         <button @click="age=32">Change Age</button>
+      </div>
+
+      <br><hr>
+      <h4>Example 8 | x-for</h4>
+      <div x-data="{ groceries: ['milk', 'eggs', 'cheese'] }">
+         <p>Groceries</p>
+         <ul>
+            <template x-for="item in groceries">
+               <li x-text="item"></li>
+            </template>
+         </ul>
+      </div>
+
+      <br><br><br><br><br><br>
+      <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+   </body>
+</html>
