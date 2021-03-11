@@ -29,8 +29,11 @@
           'https://codecourse.com/api/rss/courses',
           'https://buttondown.email/alpinejs/rss'
         ],
-
-        sortedFeed () {
+        
+        // An Alternative Approach to Computed Properties in Alpine.js
+        // https://ryangjchandler.co.uk/articles/an-alternative-approach-to-computed-properties-in-alpinejs
+        // get sortedFeed () { // use sortedFeed in template instead sortedFeed()
+        sortedFeed () { 
           return this.feed.sort((first, second) => {
             return second.date.getTime() - first.date.getTime()
           })
