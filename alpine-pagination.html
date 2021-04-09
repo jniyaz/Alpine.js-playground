@@ -278,13 +278,13 @@
       isLoading: true,
       posts: [],
       currentUrl: null,
-      firstUrl: "https://jsonplaceholder.typicode.com/posts?_page=1&_limit=15&_expand=user",
+      firstUrl: "https://jsonplaceholder.typicode.com/posts?_page=1&_limit=10&_expand=user",
       nextUrl: null,
       prevUrl: null,
       lastUrl: null,
       total: null,
       currentPage: 1,
-      perPage: 15,
+      perPage: 10,
       visiblePages: 3,
       
       totalPages() {
@@ -314,14 +314,14 @@
           range.push({
             name: i,
             isActive: i == this.currentPage,
-            url: `https://jsonplaceholder.typicode.com/posts?_page=${i}&_limit=15&_expand=user`,
+            url: `https://jsonplaceholder.typicode.com/posts?_page=${i}&_limit=10&_expand=user`,
           });
         }
         return range;
       },
       
       firstItem() {
-        return this.perPage * this.currentPage - 15 + 1;
+        return this.perPage * this.currentPage - 10 + 1;
       },
       
       lastItem() {
@@ -342,6 +342,7 @@
           this.total = response.headers.get("x-total-count");
           let formattedLinks = [];
           let links = response.headers.get("link");
+          console.log(links);
           if (typeof links === "string") {
             let extractedArr = links.split(", ");
             extractedArr.forEach((val) => {
@@ -350,6 +351,7 @@
               let url = values[0].slice(1, -1);
               formattedLinks[type] = url;
             });
+            console.log(formattedLinks);
             this.firstUrl = formattedLinks["first"];
             this.prevUrl = formattedLinks.prev ?
               formattedLinks["prev"] :
