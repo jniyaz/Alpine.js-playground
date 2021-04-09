@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>AlpineJs directives Playground</title>
+</head>
+   <body>
+    <div id="app" x-data="app()">
+        <div>
+            <p x-text="updatedMessage"></p>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+    <script>
+        function app() {
+            return {
+                message: 'Hello World',
+
+                // one way
+                // updatedMessage() {
+                //     return `${this.message.toUpperCase()}`;
+                // }
+
+                // There's a really simple solution to this... use a JavaScript getter.
+                // when use getter just call  updatedMessage instead of updatedMessage()
+                get updatedMessage() {
+                    return `${this.message.toUpperCase()}`;
+                }
+            }
+        }
+    </script>
+   </body>
+</html>
