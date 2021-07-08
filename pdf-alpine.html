@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pdf</title>
+    <style>
+        #the-canvas {
+            border: 1px solid black;
+            direction: ltr;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Alpine.js + PDF.js</h1>
+
+    <div x-data="pdfApp()" x-init="init()">
+        <div>
+            <button @click="showPrevPage()" id="prev">Previous</button>
+            <button @click="showNextPage()" id="next">Next</button>
+            &nbsp; &nbsp;
+            <span>Page: <span id="page_num"></span> / <span id="page_count"></span></span>
+        </div>
+        <canvas id="the-canvas"></canvas>
+    </div>
+
+
+    <script src="//mozilla.github.io/pdf.js/build/pdf.js"></script>
+
+    <script type="text/javascript">
+        window.pdfApp = () => {
+            return {
+                pdfDoc: null,
+                pageNum: 1,
+                pageRendering: false,
+                pageNumPending: null,
+                scale: 0.8,
+
+                init() {
+                    var url = 'https://raw.githubusercontent.com/mozilla/pdf.js/ba2edeae/web/compressed.tracemonkey-pldi-09.pdf';
+                    var PDFJS = window['pdfjs-dist/build/pdf'];
+                    // The workerSrc property shall be specified.
+                    PDFJS.GlobalWorkerOptions.workerSrc = '//mozilla.github.io/pdf.js/build/pdf.worker.js';
+
+                    // Get Document
+                    PDFJS.getDocument(url).promise.then(_pdfDoc => {
+                        this.pdfDoc = _pdfDoc;
+                        document.querySelector('#page_count').textContent = this.pdfDoc.numPages;
+                        this.renderPage(this.pageNum);
+                    }).catch(err => {
+                        console.log(err);
+                    });
+                },
+
+                // Render the page
+                renderPage(num) {
+                    this.pageIsRendering = true;
+
+                    const scale = 0.8,
+                        canvas = document.querySelector('#the-canvas'),
+                        ctx = canvas.getContext('2d');
+
+                    // Get page
+                    this.pdfDoc.getPage(num).then(page => {
+                        // Set scale
+                        const viewport = page.getViewport({ scale });
+                        canvas.height = viewport.height;
+                        canvas.width = viewport.width;
+                        const renderCtx = {
+                            canvasContext: ctx,
+                            viewport
+                        };
+
+                        page.render(renderCtx).promise.then(() => {
+                            this.pageIsRendering = false;
+
+                            if (this.pageNumIsPending !== null) {
+                                this.renderPage(this.pageNumIsPending);
+                                this.pageNumIsPending = null;
+                            }
+                        });
+
+                        // Output current page
+                        document.querySelector('#page_num').textContent = num;
+                    });
+                },
+
+                // Check for pages rendering
+                queueRenderPage(num) {
+                    // if (this.pageIsRendering) {
+                    //     this.pageNumIsPending = num;
+                    // } else {
+                    //     this.renderPage(num);
+                    // }
+                    this.renderPage(num);
+                },
+
+                // Show Prev Page
+                showPrevPage() {
+                    if (this.pageNum <= 1) {
+                        return;
+                    }
+                    this.pageNum--;
+                    this.queueRenderPage(this.pageNum);
+                },
+
+                // Show Next Page
+                showNextPage() {
+                    if (this.pageNum >= this.pdfDoc.numPages) {
+                        return;
+                    }
+                    this.pageNum++;
+                    this.queueRenderPage(this.pageNum);
+                },
+            }
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/2.8.2/alpine.js" defer></script>
+</body>
+
+</html>
