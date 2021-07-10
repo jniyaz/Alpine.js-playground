@@ -11,109 +11,219 @@
             border: 1px solid black;
             direction: ltr;
         }
+
+        #app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        #toolbar {
+            display: flex;
+            align-items: center;
+            background-color: #555;
+            color: #fff;
+            padding: 0.5em;
+        }
+
+        #toolbar button,
+        #page-mode input {
+            color: currentColor;
+            background-color: transparent;
+            font: inherit;
+            border: 1px solid currentColor;
+            border-radius: 3px;
+            padding: 0.25em 0.5em;
+        }
+
+        #toolbar button:hover,
+        #toolbar button:focus,
+        #page-mode input:hover,
+        #page-mode input:focus {
+            color: lightGreen;
+        }
+
+        #page-mode {
+            display: flex;
+            align-items: center;
+            padding: 0.25em 0.5em;
+        }
+
+        #viewport-container {
+            flex: 1;
+            background: #eee;
+            overflow: auto;
+        }
+
+        #viewport {
+            width: 90%;
+            margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        #viewport>div {
+            text-align: center;
+            max-width: 100%;
+        }
+
+        #viewport canvas {
+            width: 100%;
+            box-shadow: 0 2px 5px gray;
+        }
     </style>
 </head>
 
 <body>
     <h1>Alpine.js + PDF.js</h1>
 
-    <div x-data="pdfApp()" x-init="init()">
-        <div>
+    <div x-data="pdfApp()" x-init="init()" id="app">
+        <!-- <div>
             <button @click="showPrevPage()" id="prev">Previous</button>
             <button @click="showNextPage()" id="next">Next</button>
             &nbsp; &nbsp;
             <span>Page: <span id="page_num"></span> / <span id="page_count"></span></span>
         </div>
-        <canvas id="the-canvas"></canvas>
+        <canvas id="the-canvas"></canvas> -->
+        <div role="toolbar" id="toolbar">
+            <div id="pager">
+                <button @click="prev()" data-pager="prev">prev</button>
+                <button @click="next()" data-pager="next">next</button>
+            </div>
+            <div id="page-mode">
+                <label>Page Mode <input type="number" value="1" min="1" /></label>
+            </div>
+        </div>
+        <div id="viewport-container">
+            <div role="main" id="viewport"></div>
+        </div>
     </div>
 
 
-    <script src="//mozilla.github.io/pdf.js/build/pdf.js"></script>
+    <!-- <script src="//mozilla.github.io/pdf.js/build/pdf.js"></script> -->
+    <script src="https://unpkg.com/pdfjs-dist@2.0.489/build/pdf.min.js"></script>
 
     <script type="text/javascript">
         window.pdfApp = () => {
             return {
-                pdfDoc: null,
-                pageNum: 1,
-                pageRendering: false,
-                pageNumPending: null,
-                scale: 0.8,
+                currentPageIndex: 0,
+                pageMode: 1,
+                cursorIndex: Math.floor(this.currentPageIndex / this.pageMode),
+                pdfInstance: null,
+                totalPagesCount: 0,
+                viewport: document.querySelector("#viewport"),
 
                 init() {
                     var url = 'https://raw.githubusercontent.com/mozilla/pdf.js/ba2edeae/web/compressed.tracemonkey-pldi-09.pdf';
                     var PDFJS = window['pdfjs-dist/build/pdf'];
+                    
                     // The workerSrc property shall be specified.
-                    PDFJS.GlobalWorkerOptions.workerSrc = '//mozilla.github.io/pdf.js/build/pdf.worker.js';
+                    // PDFJS.GlobalWorkerOptions.workerSrc = '//mozilla.github.io/pdf.js/build/pdf.worker.js';
 
-                    // Get Document
-                    PDFJS.getDocument(url).promise.then(_pdfDoc => {
-                        this.pdfDoc = _pdfDoc;
-                        document.querySelector('#page_count').textContent = this.pdfDoc.numPages;
-                        this.renderPage(this.pageNum);
-                    }).catch(err => {
-                        console.log(err);
+                    PDFJS.getDocument(url).then(pdf => {
+                        this.pdfInstance = pdf;
+                        this.totalPagesCount = pdf.numPages;
+                        this.initPager();
+                        this.initPageMode();
+                        this.render();
                     });
                 },
+                initPager() {
+                    const pager = document.querySelector("#pager");
+                    pager.addEventListener("click", this.onPagerButtonsClick);
+                    return () => {
+                        pager.removeEventListener("click", this.onPagerButtonsClick);
+                    };
+                },
+                onPageModeChange(event) {
+                    this.pageMode = Number(event.target.value);
+                    this.render();
+                },
+                initPageMode() {
+                    const input = document.querySelector("#page-mode input");
+                    input.setAttribute("max", this.totalPagesCount);
+                    input.addEventListener("change", this.onPageModeChange);
+                    return () => {
+                        input.removeEventListener("change", this.onPageModeChange);
+                    };
+                },
+                prev() {
+                    if (this.currentPageIndex === 0) {
+                        return;
+                    }
+                    this.currentPageIndex -= this.pageMode;
+                    if (this.currentPageIndex < 0) {
+                        this.currentPageIndex = 0;
+                    }
+                    this.render();
+                },
+                next() {
+                    if (this.currentPageIndex === this.totalPagesCount - 1) {
+                        return;
+                    }
+                    this.currentPageIndex += this.pageMode;
+                    if (this.currentPageIndex > this.totalPagesCount - 1) {
+                        this.currentPageIndex = this.totalPagesCount - 1;
+                    }
+                    this.render();
+                },
+                // onPagerButtonsClick(event) {
+                //     const action = event.target.getAttribute("data-pager");
+                //     if (action === "prev") {
+                //         if (this.currentPageIndex === 0) {
+                //             return;
+                //         }
+                //         this.currentPageIndex -= this.pageMode;
+                //         if (this.currentPageIndex < 0) {
+                //             this.currentPageIndex = 0;
+                //         }
+                //         this.render();
+                //     }
+                //     if (action === "next") {
+                //         if (this.currentPageIndex === this.totalPagesCount - 1) {
+                //             return;
+                //         }
+                //         this.currentPageIndex += this.pageMode;
+                //         if (this.currentPageIndex > this.totalPagesCount - 1) {
+                //             this.currentPageIndex = this.totalPagesCount - 1;
+                //         }
+                //         this.render();
+                //     }
+                // },
+                render() {
+                    this.cursorIndex = Math.floor(this.currentPageIndex / this.pageMode);
+                    const startPageIndex = this.cursorIndex * this.pageMode;
+                    const endPageIndex =
+                        startPageIndex + this.pageMode < this.totalPagesCount
+                            ? startPageIndex + this.pageMode - 1
+                            : this.totalPagesCount - 1;
 
-                // Render the page
-                renderPage(num) {
-                    this.pageIsRendering = true;
+                    const renderPagesPromises = [];
+                    for (let i = startPageIndex; i <= endPageIndex; i++) {
+                        renderPagesPromises.push(this.pdfInstance.getPage(i + 1));
+                    }
 
-                    const scale = 0.8,
-                        canvas = document.querySelector('#the-canvas'),
-                        ctx = canvas.getContext('2d');
-
-                    // Get page
-                    this.pdfDoc.getPage(num).then(page => {
-                        // Set scale
-                        const viewport = page.getViewport({ scale });
-                        canvas.height = viewport.height;
-                        canvas.width = viewport.width;
-                        const renderCtx = {
-                            canvasContext: ctx,
-                            viewport
-                        };
-
-                        page.render(renderCtx).promise.then(() => {
-                            this.pageIsRendering = false;
-
-                            if (this.pageNumIsPending !== null) {
-                                this.renderPage(this.pageNumIsPending);
-                                this.pageNumIsPending = null;
-                            }
-                        });
-
-                        // Output current page
-                        document.querySelector('#page_num').textContent = num;
+                    Promise.all(renderPagesPromises).then(pages => {
+                        const pagesHTML = `<div style="width: ${this.pageMode > 1 ? "50%" : "100%"
+                            }"><canvas></canvas></div>`.repeat(pages.length);
+                        this.viewport.innerHTML = pagesHTML;
+                        pages.forEach(page => this.renderPage(page));
                     });
                 },
+                renderPage(page) {
+                    let pdfViewport = page.getViewport(1);
+                    const container = this.viewport.children[page.pageIndex - this.cursorIndex * this.pageMode];
+                    pdfViewport = page.getViewport(container.offsetWidth / pdfViewport.width);
+                    const canvas = container.children[0];
+                    const context = canvas.getContext("2d");
+                    canvas.height = pdfViewport.height;
+                    canvas.width = pdfViewport.width;
 
-                // Check for pages rendering
-                queueRenderPage(num) {
-                    // if (this.pageIsRendering) {
-                    //     this.pageNumIsPending = num;
-                    // } else {
-                    //     this.renderPage(num);
-                    // }
-                    this.renderPage(num);
-                },
-
-                // Show Prev Page
-                showPrevPage() {
-                    if (this.pageNum <= 1) {
-                        return;
-                    }
-                    this.pageNum--;
-                    this.queueRenderPage(this.pageNum);
-                },
-
-                // Show Next Page
-                showNextPage() {
-                    if (this.pageNum >= this.pdfDoc.numPages) {
-                        return;
-                    }
-                    this.pageNum++;
-                    this.queueRenderPage(this.pageNum);
+                    page.render({
+                        canvasContext: context,
+                        viewport: pdfViewport
+                    });
                 },
             }
         }
