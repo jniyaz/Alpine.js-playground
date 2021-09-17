@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alpine 3</title>
+</head>
+
+<body>
+    <div x-data="testApp1()">
+        <span x-text="appName"></span>
+    </div>
+    <div x-data="testApp2()"></div>
+    
+    <script defer src="https://unpkg.com/alpinejs@3.2.3/dist/cdn.min.js"></script>
+    <script>
+        window.testApp1 = function () {
+            return {
+                appName: 'Hello App1',
+                dispatcher: null,
+                init() {
+                    console.log('init app1..');
+                }
+            }
+        }
+
+        window.testApp2 = function () {
+            return {
+                appName: 'Hello App2',
+                init() {
+                    console.log('init app2..');
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>
